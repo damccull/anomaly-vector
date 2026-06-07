@@ -1,8 +1,19 @@
 use std::path::PathBuf;
 
-use anomaly_vector::{get_nms_mmap, get_pe_header_offset, get_section_offsets};
+use anomaly_vector::{get_nms_mmap, get_pe_header_offset, get_section_offsets, telemetry};
+use tracing_subscriber::fmt::writer::MakeWriterExt;
 
 fn main() -> anyhow::Result<()> {
+    //Configure log levels to channels
+    let stdout_sink = std::io::stdout.with_max_level(tracing::Level::INFO);
+    let stderr_sink = std::io::stderr.with_min_level(tracing::Level::WARN);
+
+    telemetry::init_subscriber(
+        "anomaly_vector".to_owned(),
+        "info".to_owned(),
+        stdout_sink.and(stderr_sink),
+        None,
+    );
     println!("Hello, Traveller!");
     let path =
         PathBuf::from(format!("{}/.steam/steam/steamapps/common/No Man's Sky/Binaries/NMS.exe", std::env::var("HOME").unwrap()));
