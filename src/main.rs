@@ -15,11 +15,11 @@ fn main() -> anyhow::Result<()> {
         None,
     );
 
-    ready_go()
+    initialize_variance()
 }
 
 #[tracing::instrument]
-fn ready_go() -> anyhow::Result<()> {
+fn initialize_variance() -> anyhow::Result<()> {
     println!("Hello, Traveller!");
     let path =
         PathBuf::from(format!("{}/.steam/steam/steamapps/common/No Man's Sky/Binaries/NMS.exe", std::env::var("HOME").unwrap()));
