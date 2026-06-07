@@ -39,7 +39,7 @@ fn initialize_variance() -> anyhow::Result<()> {
     let pe_offset = get_pe_header_offset(&nms_mmap)?;
     info!("PE header offset: {}", &pe_offset);
 
-    info!("Getting offsets for text and data sections...");
+    info!("Getting offsets for text and rdata sections...");
     let pe_header_info = read_pe_header(&nms_mmap, pe_offset);
 
     info!("Got PE Header Info");
