@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.102"
 memmap2 = "0.9.10"
+thiserror = "2.0.18"
 tracing = "0.1.44"
 tracing-bunyan-formatter = "0.3.10"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
