@@ -24,7 +24,7 @@ where
     //     .open(&log_file)
     //     .unwrap_or_else(|e| panic!("Failed to open log file '{}': {e}", log_file.display()));
 
-    // INFO: Tracing subscriber plain text log
+    // Tracing subscriber plain text log
     #[cfg(not(feature = "bunyan"))]
     {
         use tracing_subscriber::fmt::{self, format::FmtSpan};
@@ -51,7 +51,7 @@ where
         // .with(file_layer)
     }
 
-    // INFO: Bunyan
+    // Bunyan
     #[cfg(feature = "bunyan")]
     {
         use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
