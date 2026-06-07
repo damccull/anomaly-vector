@@ -11,5 +11,5 @@ pub enum NmsFileReadError {
     #[error("Invalid or malformed optional header")]
     InvalidOptionalHeader,
     #[error(transparent)]
-    UnexpectedError(#[from] anyhow::Error)
+    UnexpectedError(#[from] anyhow::Error),
 }

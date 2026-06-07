@@ -21,8 +21,10 @@ fn main() -> anyhow::Result<()> {
 #[tracing::instrument]
 fn initialize_variance() -> anyhow::Result<()> {
     println!("Hello, Traveller!");
-    let path =
-        PathBuf::from(format!("{}/.steam/steam/steamapps/common/No Man's Sky/Binaries/NMS.exe", std::env::var("HOME").unwrap()));
+    let path = PathBuf::from(format!(
+        "{}/.steam/steam/steamapps/common/No Man's Sky/Binaries/NMS.exe",
+        std::env::var("HOME").unwrap()
+    ));
     if path.exists() {
         info!("Found NMS.exe");
     } else {
