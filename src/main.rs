@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use anomaly_vector::{get_nms_mmap, get_pe_header_offset, read_pe_header, telemetry};
-use tracing::{debug, error, info};
+use anomaly_vector::{NmsKeyExtractor, telemetry};
+use tracing::{error, info};
 
 fn main() -> anyhow::Result<()> {
     //Configure log levels to channels
@@ -31,19 +31,8 @@ fn initialize_variance() -> anyhow::Result<()> {
         error!("Can't find NMS.exe");
     }
 
-    info!("Preparing memory map...");
-
-    let nms_mmap = get_nms_mmap(path)?;
-
-    info!("Memory map retrieved.");
-    let pe_offset = get_pe_header_offset(&nms_mmap)?;
-    info!("PE header offset: {}", &pe_offset);
-
-    info!("Getting offsets for text and rdata sections...");
-    let pe_header_info = read_pe_header(&nms_mmap, pe_offset);
-
-    info!("Got PE Header Info");
-    debug!("PEHeaderInfo: {:#?}", &pe_header_info);
+    let _extractor = NmsKeyExtractor::initialize(path)?;
+    _extractor.key();
 
     Ok(())
 }
