@@ -6,7 +6,7 @@ use tracing_subscriber::fmt::MakeWriter;
 use tracing_subscriber::{EnvFilter, prelude::*};
 
 /// Sets up a tracing subscriber.
-pub fn get_subscriber<Sink>(
+fn get_subscriber<Sink>(
     _name: String,
     env_filter: String,
     sink: Sink,
