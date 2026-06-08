@@ -9,6 +9,7 @@ use crate::error::NmsFileReadError;
 pub struct NmsKeyExtractor {
     key_start: usize,
     key_offset: usize,
+    mmap: Mmap,
 }
 
 impl NmsKeyExtractor {
@@ -38,6 +39,7 @@ impl NmsKeyExtractor {
         // Temporary to stop unused variable warnings
         let _s = self.key_start;
         let _o = self.key_offset;
+        let _mmap = &self.mmap;
         todo!()
     }
 }
