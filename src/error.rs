@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum NmsFileReadError {
+pub enum Error {
     #[error("Invalid DOS header: {0}")]
     InvalidDosHeader(&'static str),
     #[error("Invalid PE header: {0}")]
@@ -10,6 +10,8 @@ pub enum NmsFileReadError {
     InvalidCoffsHeader(&'static str),
     #[error("Invalid or malformed optional header")]
     InvalidOptionalHeader,
+    #[error("I/O error while reading executable: {0}")]
+    IOError(#[from] std::io::Error),
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
 }

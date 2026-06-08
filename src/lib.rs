@@ -7,9 +7,11 @@
 //
 //
 //
-pub mod error;
 pub mod telemetry;
 
+mod error;
 mod nms_key_extractor;
 
+pub use error::Error as NmsKeyExtractorError;
+pub use error::Error;
 pub use nms_key_extractor::NmsKeyExtractor;
