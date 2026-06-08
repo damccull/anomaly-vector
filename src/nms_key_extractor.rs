@@ -159,25 +159,20 @@ impl NmsKeyExtractor {
             // Get the bytes representing the section name
             let section_name = &section_table_slice[header_start..header_start + 8];
 
+            // Bounds checking wrapper to avoid panics and read u32's more easily
+            let read_u32_at = |offset: usize| -> Result<usize, Error> {
+                let bytes = section_table_slice[header_start + offset..header_start + offset + 4]
+                    .try_into()
+                    .map_err(|_| {
+                        Error::InvalidCoffsHeader("Section table field bounds corruption")
+                    })?;
+                Ok(u32::from_le_bytes(bytes) as usize)
+            };
+
             let secmap = SectionMap {
-                disk_offset: u32::from_le_bytes([
-                    section_table_slice[header_start + 20],
-                    section_table_slice[header_start + 21],
-                    section_table_slice[header_start + 22],
-                    section_table_slice[header_start + 23],
-                ]) as usize,
-                length: u32::from_le_bytes([
-                    section_table_slice[header_start + 16],
-                    section_table_slice[header_start + 17],
-                    section_table_slice[header_start + 18],
-                    section_table_slice[header_start + 19],
-                ]) as usize,
-                virtual_address: u32::from_le_bytes([
-                    section_table_slice[header_start + 12],
-                    section_table_slice[header_start + 13],
-                    section_table_slice[header_start + 14],
-                    section_table_slice[header_start + 15],
-                ]) as usize,
+                virtual_address: read_u32_at(12)?,
+                length: read_u32_at(16)?,
+                disk_offset: read_u32_at(20)?,
             };
 
             // Must include extra padding in each match arm because we're comparing against
