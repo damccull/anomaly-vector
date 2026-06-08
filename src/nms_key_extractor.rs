@@ -71,8 +71,11 @@ impl NmsKeyExtractor {
 
         // Read the offset to the PE header, which is at 0x3c and 4 bytes long
         // Convert little endian bytes into an u32
-        let pe_offset =
-            u32::from_le_bytes([mmap[0x3c], mmap[0x3d], mmap[0x3e], mmap[0x3f]]) as usize;
+        let pe_offset = u32::from_le_bytes(
+            mmap[0x3c..0x40]
+                .try_into()
+                .map_err(|_| Error::InvalidDosHeader("malformed or corrupt dos header"))?,
+        ) as usize;
 
         // Ensure offset fits within the map's bounds
         if pe_offset >= mmap.len() {
