@@ -6,6 +6,13 @@ use tracing::{debug, info};
 
 use crate::error::Error;
 
+const DOS_HEADER_LENGTH: usize = 0x40;
+const DOS_HEADER_MAGIC_BYTES: [u8; 2] = [b'M', b'Z'];
+const PE_HEADER_MAGIC_BYTES: [u8; 4] = [b'P', b'E', 0x00, 0x00];
+
+const TEXT_SECTION_NAME: &[u8] = b".text\0\0\0";
+const RDATA_SECTION_NAME: &[u8] = b".rdata\0\0";
+
 pub struct NmsKeyExtractor {
     key_start: usize,
     key_offset: usize,
@@ -58,14 +65,14 @@ impl NmsKeyExtractor {
 
     pub fn get_pe_header_offset(mmap: &[u8]) -> Result<usize, Error> {
         // Ensure the map is large enough to contain the e_lfanew field
-        if mmap.len() < 0x40 {
+        if mmap.len() < DOS_HEADER_LENGTH {
             return Err(Error::InvalidDosHeader(
                 "file too short to contain DOS header",
             ));
         }
 
         // Safety check. Ensure valid DOS header with magic bytes
-        if mmap[0..2] != [b'M', b'Z'] {
+        if mmap[0..2] != DOS_HEADER_MAGIC_BYTES {
             return Err(Error::InvalidDosHeader("missing or malformed magic bytes"));
         }
 
@@ -91,7 +98,7 @@ impl NmsKeyExtractor {
         // Ensure this is a PE header by checking magic bytes
         let signature_end = pe_header_offset + 4;
         if mmap.len() < signature_end
-            || mmap[pe_header_offset..signature_end] != [b'P', b'E', 0x00, 0x00]
+            || mmap[pe_header_offset..signature_end] != PE_HEADER_MAGIC_BYTES
         {
             return Err(Error::InvalidPeHeader("incorrect or malformed magic bytes"));
         }
@@ -167,6 +174,7 @@ impl NmsKeyExtractor {
                 Ok(u32::from_le_bytes(bytes) as usize)
             };
 
+            // These values are contained in the header starting at the bytes passed to the fn
             let secmap = SectionMap {
                 virtual_address: read_u32_at(12)?,
                 length: read_u32_at(16)?,
@@ -176,11 +184,11 @@ impl NmsKeyExtractor {
             // Must include extra padding in each match arm because we're comparing against
             // 8 bytes. Otherwise the catch-all gets it and valid sections don't match
             match section_name {
-                b".text\0\0\0" => {
+                TEXT_SECTION_NAME => {
                     pe_header_info.text_section = secmap;
                 }
 
-                b".rdata\0\0" => {
+                RDATA_SECTION_NAME => {
                     pe_header_info.rdata_section = secmap;
                 }
                 _ => {
