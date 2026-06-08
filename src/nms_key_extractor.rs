@@ -4,7 +4,7 @@ use anyhow::Context;
 use memmap2::Mmap;
 use tracing::{debug, info};
 
-use crate::error::NmsFileReadError;
+use crate::error::Error;
 
 pub struct NmsKeyExtractor {
     key_start: usize,
@@ -32,6 +32,7 @@ impl NmsKeyExtractor {
         Ok(Self {
             key_start: 0,
             key_offset: 0,
+            mmap: nms_mmap,
         })
     }
 
@@ -55,19 +56,17 @@ impl NmsKeyExtractor {
         Ok(mmap)
     }
 
-    pub fn get_pe_header_offset(map: &[u8]) -> Result<usize, NmsFileReadError> {
+    pub fn get_pe_header_offset(map: &[u8]) -> Result<usize, Error> {
         // Ensure the map is large enough to contain the e_lfanew field
         if map.len() < 0x40 {
-            return Err(NmsFileReadError::InvalidDosHeader(
+            return Err(Error::InvalidDosHeader(
                 "file too short to contain DOS header",
             ));
         }
 
         // Safety check. Ensure valid DOS header with magic bytes
         if map[0..2] != [b'M', b'Z'] {
-            return Err(NmsFileReadError::InvalidDosHeader(
-                "missing or malformed magic bytes",
-            ));
+            return Err(Error::InvalidDosHeader("missing or malformed magic bytes"));
         }
 
         // Read the offset to the PE header, which is at 0x3c and 4 bytes long
@@ -76,7 +75,7 @@ impl NmsKeyExtractor {
 
         // Ensure offset fits within the map's bounds
         if pe_offset >= map.len() {
-            return Err(NmsFileReadError::InvalidPeHeader(
+            return Err(Error::InvalidPeHeader(
                 "file too short to contain PE header",
             ));
         }
@@ -84,18 +83,13 @@ impl NmsKeyExtractor {
         Ok(pe_offset)
     }
 
-    fn read_pe_header(
-        map: &[u8],
-        pe_header_offset: usize,
-    ) -> Result<PEHeaderInfo, NmsFileReadError> {
+    fn read_pe_header(map: &[u8], pe_header_offset: usize) -> Result<PEHeaderInfo, Error> {
         // Ensure this is a PE header by checking magic bytes
         let signature_end = pe_header_offset + 4;
         if map.len() < signature_end
             || map[pe_header_offset..signature_end] != [b'P', b'E', 0x00, 0x00]
         {
-            return Err(NmsFileReadError::InvalidPeHeader(
-                "incorrect or malformed magic bytes",
-            ));
+            return Err(Error::InvalidPeHeader("incorrect or malformed magic bytes"));
         }
 
         // Get COFF offsets
@@ -103,7 +97,7 @@ impl NmsKeyExtractor {
         let coff_end = coff_start + 20; // COFF is always exactly 20 bytes long
 
         if map.len() < coff_end {
-            return Err(NmsFileReadError::InvalidCoffsHeader(
+            return Err(Error::InvalidCoffsHeader(
                 "file too small to contain COFFS header",
             ));
         }
@@ -132,7 +126,7 @@ impl NmsKeyExtractor {
         // Check size to avoid crash
         let section_table_end = section_table_start + section_table_size;
         if map.len() < section_table_end {
-            return Err(NmsFileReadError::InvalidCoffsHeader(
+            return Err(Error::InvalidCoffsHeader(
                 "file too small to contain entire section table",
             ));
         }
