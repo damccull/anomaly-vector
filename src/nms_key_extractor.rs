@@ -17,14 +17,14 @@ impl NmsKeyExtractor {
     pub fn initialize<P: AsRef<Path>>(path: P) -> Result<Self, anyhow::Error> {
         info!("Preparing memory map...");
 
-        let nms_mmap = Self::get_nms_mmap(path)?;
+        let mmap = Self::get_nms_mmap(path)?;
 
         info!("Memory map retrieved.");
-        let pe_offset = Self::get_pe_header_offset(&nms_mmap)?;
+        let pe_offset = Self::get_pe_header_offset(&mmap)?;
         info!("PE header offset: {}", &pe_offset);
 
         info!("Getting offsets for text and rdata sections...");
-        let pe_header_info = Self::read_pe_header(&nms_mmap, pe_offset);
+        let pe_header_info = Self::read_pe_header(&mmap, pe_offset);
 
         info!("Got PE Header Info");
         debug!("PEHeaderInfo: {:#?}", &pe_header_info);
@@ -32,7 +32,7 @@ impl NmsKeyExtractor {
         Ok(Self {
             key_start: 0,
             key_offset: 0,
-            mmap: nms_mmap,
+            mmap,
         })
     }
 
