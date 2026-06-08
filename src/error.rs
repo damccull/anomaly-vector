@@ -2,14 +2,6 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum Error {
-    #[error("Invalid DOS header: {0}")]
-    InvalidDosHeader(&'static str),
-    #[error("Invalid PE header: {0}")]
-    InvalidPeHeader(&'static str),
-    #[error("Invalid COFFS header: {0}")]
-    InvalidCoffsHeader(&'static str),
-    #[error("Invalid or malformed optional header")]
-    InvalidOptionalHeader,
     #[error("I/O error while reading executable: {0}")]
     IOError(#[from] std::io::Error),
     #[error(transparent)]
