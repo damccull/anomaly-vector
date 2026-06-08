@@ -56,25 +56,26 @@ impl NmsKeyExtractor {
         Ok(mmap)
     }
 
-    pub fn get_pe_header_offset(map: &[u8]) -> Result<usize, Error> {
+    pub fn get_pe_header_offset(mmap: &[u8]) -> Result<usize, Error> {
         // Ensure the map is large enough to contain the e_lfanew field
-        if map.len() < 0x40 {
+        if mmap.len() < 0x40 {
             return Err(Error::InvalidDosHeader(
                 "file too short to contain DOS header",
             ));
         }
 
         // Safety check. Ensure valid DOS header with magic bytes
-        if map[0..2] != [b'M', b'Z'] {
+        if mmap[0..2] != [b'M', b'Z'] {
             return Err(Error::InvalidDosHeader("missing or malformed magic bytes"));
         }
 
         // Read the offset to the PE header, which is at 0x3c and 4 bytes long
         // Convert little endian bytes into an u32
-        let pe_offset = u32::from_le_bytes([map[0x3c], map[0x3d], map[0x3e], map[0x3f]]) as usize;
+        let pe_offset =
+            u32::from_le_bytes([mmap[0x3c], mmap[0x3d], mmap[0x3e], mmap[0x3f]]) as usize;
 
         // Ensure offset fits within the map's bounds
-        if pe_offset >= map.len() {
+        if pe_offset >= mmap.len() {
             return Err(Error::InvalidPeHeader(
                 "file too short to contain PE header",
             ));
@@ -83,11 +84,11 @@ impl NmsKeyExtractor {
         Ok(pe_offset)
     }
 
-    fn read_pe_header(map: &[u8], pe_header_offset: usize) -> Result<PEHeaderInfo, Error> {
+    fn read_pe_header(mmap: &[u8], pe_header_offset: usize) -> Result<PEHeaderInfo, Error> {
         // Ensure this is a PE header by checking magic bytes
         let signature_end = pe_header_offset + 4;
-        if map.len() < signature_end
-            || map[pe_header_offset..signature_end] != [b'P', b'E', 0x00, 0x00]
+        if mmap.len() < signature_end
+            || mmap[pe_header_offset..signature_end] != [b'P', b'E', 0x00, 0x00]
         {
             return Err(Error::InvalidPeHeader("incorrect or malformed magic bytes"));
         }
@@ -96,13 +97,13 @@ impl NmsKeyExtractor {
         let coff_start = signature_end;
         let coff_end = coff_start + 20; // COFF is always exactly 20 bytes long
 
-        if map.len() < coff_end {
+        if mmap.len() < coff_end {
             return Err(Error::InvalidCoffsHeader(
                 "file too small to contain COFFS header",
             ));
         }
 
-        let coff_slice = &map[coff_start..coff_end];
+        let coff_slice = &mmap[coff_start..coff_end];
 
         // Read the needed sections from the COFF header
         let num_sections = u16::from_le_bytes(
@@ -125,14 +126,14 @@ impl NmsKeyExtractor {
 
         // Check size to avoid crash
         let section_table_end = section_table_start + section_table_size;
-        if map.len() < section_table_end {
+        if mmap.len() < section_table_end {
             return Err(Error::InvalidCoffsHeader(
                 "file too small to contain entire section table",
             ));
         }
 
         let section_table_slice =
-            &map[section_table_start..section_table_start + section_table_size];
+            &mmap[section_table_start..section_table_start + section_table_size];
 
         let coff_info = CoffHeaderInfo {
             number_sections: num_sections,
