@@ -47,3 +47,13 @@ were never meant to possess.
 
 // 16 // 16 // 16 // VECTOR_INJECTION_SUCCESSFUL //
 ```
+
+# Application Development
+
+# Tasks
+- [ ] Identify save files locations and 'slots' by host system
+    - [ ] PC Steam
+    - [ ] PC GoG
+    - [ ] PC Xbox Gamepass
+    - Possibly others, no plans yet
+- [ ] 
